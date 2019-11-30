@@ -6,7 +6,7 @@ import (
 )
 
 type Leave struct {
-	Name string `json:"name"`
+	Name string
 }
 
 func CreateLeave(l *Leave) uint {

@@ -5,6 +5,10 @@ import (
 	"github.com/Panmax/gin-template/interfaces/dto"
 )
 
-func LeaveDTOConvertToLeave(leaveDTO dto.LeaveDTO) *leave.Leave {
-	return &leave.Leave{Name: leaveDTO.Name}
+func LeaveAddConvertTo(leaveAdd *dto.LeaveAdd) *leave.Leave {
+	return &leave.Leave{Name: leaveAdd.Name}
+}
+
+func LeaveDTOConvertFrom(leave *leave.Leave) *dto.LeaveDTO {
+	return &dto.LeaveDTO{Name: leave.Name}
 }

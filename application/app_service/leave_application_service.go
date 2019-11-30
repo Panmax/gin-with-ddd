@@ -1,4 +1,4 @@
-package service
+package app_service
 
 import "github.com/Panmax/gin-template/domain/leave"
 

@@ -1,19 +1,59 @@
 package main
 
 import (
+	"context"
+	"fmt"
+	"github.com/Panmax/gin-template/infrastructure/config"
 	"github.com/Panmax/gin-template/interfaces/facade"
 	"github.com/gin-gonic/gin"
 	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"time"
 )
 
 func main() {
-	r := gin.Default()
-	api := r.Group("/api")
+	gin.SetMode(config.AppMode)
+	engine := gin.Default()
+
+	api := engine.Group("/api")
 
 	leaveApi := api.Group("/leaves")
 	facade.LeaveRouterRegister(leaveApi)
 
-	if err := r.Run(); err != nil {
-		log.Fatal(err)
+	server := &http.Server{
+		Addr:         config.AppPort,
+		Handler:      engine,
+		ReadTimeout:  config.AppReadTimeout * time.Second,
+		WriteTimeout: config.AppWriteTimeout * time.Second,
 	}
+
+	fmt.Println("|-----------------------------------|")
+	fmt.Println("|            go-gin-api             |")
+	fmt.Println("|-----------------------------------|")
+	fmt.Println("|  Go Http Server Start Successful  |")
+	fmt.Println("|    Port" + config.AppPort + "     Pid:" + fmt.Sprintf("%d", os.Getpid()) + "        |")
+	fmt.Println("|-----------------------------------|")
+	fmt.Println("")
+
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("HTTP server listen: %s\n", err)
+		}
+	}()
+
+	// 等待中断信号以优雅地关闭服务器（设置 5 秒的超时时间）
+	signalChan := make(chan os.Signal)
+	signal.Notify(signalChan, os.Interrupt)
+	sig := <-signalChan
+	log.Println("Get Signal:", sig)
+	log.Println("Shutdown Server ...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := server.Shutdown(ctx); err != nil {
+		log.Fatal("Server Shutdown:", err)
+	}
+	log.Println("Server exiting")
 }
